@@ -1,0 +1,32 @@
+### SBT template
+# Simple Build Tool
+# http://www.scala-sbt.org/release/docs/Getting-Started/Directories.html#configuring-version-control
+
+dist/*
+target/
+lib_managed/
+src_managed/
+project/project/
+project/target/
+.history
+.cache
+.lib/
+.bsp
+/.settings
+/.classpath
+/.project
+*.html
+*.sc
+/.bsp
+
+### Scala template
+*.class
+*.log
+
+### JetBrains Idea files ###
+.idea
+
+# coursier cache
+/null
+/results
+
