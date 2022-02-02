@@ -1,6 +1,7 @@
 package di.look.gatling
 
 import di.look.gatling.Actions._
+import di.look.gatling.Feeders.loginPassFeeder
 import di.look.gatling.Protocol.httpProtocol
 import io.gatling.core.Predef._
 
@@ -8,7 +9,7 @@ class WebToursSimulation extends Simulation {
 
 
   private val scn = scenario("WebToursSimulation")
-    .feed(Feeders.loginPassFeeder)
+    .feed(loginPassFeeder)
     .exec(openWebTours)
     .pause(3)
     .exec(login)
@@ -23,5 +24,5 @@ class WebToursSimulation extends Simulation {
     .pause(3)
     .exec(goToHome)
 
-  setUp(scn.inject(atOnceUsers(1))).protocols(httpProtocol)
+  setUp(scn.inject(atOnceUsers(1)).disablePauses).protocols(httpProtocol)
 }

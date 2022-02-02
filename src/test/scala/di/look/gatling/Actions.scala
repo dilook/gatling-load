@@ -9,20 +9,12 @@ object Actions {
 
   val openWebTours: HttpRequestBuilder = http("openWebTours")
     .get("/webtours/")
-    .headers(upgradeInsecureRequestHeader)
-    .check(regex("""Welcome to the Web Tours site."""))
+    .check(regex("""Web Tours"""))
     .resources(
       http("header.html")
-        .get("/webtours/header.html")
-        .headers(upgradeInsecureRequestHeader),
-      http("favicon.ico")
-        .get("/favicon.ico")
-        .headers(acceptHeader)
-        .check(status.is(404)),
+        .get("/webtours/header.html"),
       http("welcome.pl")
-        .get("/cgi-bin/welcome.pl?signOff=true")
-        .headers(upgradeInsecureRequestHeader)
-        .check(regex("name=\"userSession\" value=\"(.*)\"").saveAs("userSession")),
+        .get("/cgi-bin/welcome.pl?signOff=true"),
       http("hp_logo.png")
         .get("/webtours/images/hp_logo.png")
         .headers(acceptHeader),
@@ -30,11 +22,10 @@ object Actions {
         .get("/webtours/images/webtours.png")
         .headers(acceptHeader),
       http("home.html")
-        .get("/WebTours/home.html")
-        .headers(upgradeInsecureRequestHeader),
+        .get("/WebTours/home.html"),
       http("nav.pl")
         .get("/cgi-bin/nav.pl?in=home")
-        .headers(upgradeInsecureRequestHeader),
+        .check(regex("name=\"userSession\" value=\"(.*)\"").saveAs("userSession")),
       http("mer_login.gif")
         .get("/WebTours/images/mer_login.gif")
         .headers(acceptHeader)
@@ -49,13 +40,12 @@ object Actions {
     .formParam("login.x", "68")
     .formParam("login.y", "13")
     .formParam("JSFormSubmit", "off")
+    .check(regex("""User password was correct""").exists)
     .resources(
       http("nav.pl")
-        .get("/cgi-bin/nav.pl?page=menu&in=home")
-        .headers(upgradeInsecureRequestHeader),
+        .get("/cgi-bin/nav.pl?page=menu&in=home"),
       http("login.pl")
-        .get("/cgi-bin/login.pl?intro=true")
-        .headers(upgradeInsecureRequestHeader),
+        .get("/cgi-bin/login.pl?intro=true"),
       http("flights.gif")
         .get("/WebTours/images/flights.gif")
         .headers(acceptHeader),
@@ -72,14 +62,12 @@ object Actions {
 
   val goToFlights: HttpRequestBuilder = http("welcome.pl")
     .get("/cgi-bin/welcome.pl?page=search")
-    .headers(upgradeInsecureRequestHeader)
+    .check(status is 200)
     .resources(
       http("nav.pl")
-        .get("/cgi-bin/nav.pl?page=menu&in=flights")
-        .headers(upgradeInsecureRequestHeader),
+        .get("/cgi-bin/nav.pl?page=menu&in=flights"),
       http("reservations.pl")
-        .get("/cgi-bin/reservations.pl?page=welcome")
-        .headers(upgradeInsecureRequestHeader),
+        .get("/cgi-bin/reservations.pl?page=welcome"),
       http("home.gif")
         .get("/WebTours/images/home.gif")
         .headers(acceptHeader),
@@ -96,9 +84,9 @@ object Actions {
     .headers(originHeader)
     .formParam("advanceDiscount", "0")
     .formParam("depart", "Portland")
-    .formParam("departDate", "01/31/2022")
+    .formParam("departDate", "02/02/2022")
     .formParam("arrive", "Portland")
-    .formParam("returnDate", "02/01/2022")
+    .formParam("returnDate", "04/02/2022")
     .formParam("numPassengers", "1")
     .formParam("seatPref", "None")
     .formParam("seatType", "Coach")
@@ -111,7 +99,7 @@ object Actions {
   val selectFlight: HttpRequestBuilder = http("reservations.pl")
     .post("/cgi-bin/reservations.pl")
     .headers(originHeader)
-    .formParam("outboundFlight", "552;0;01/31/2022")
+    .formParam("outboundFlight", "552;0;02/02/2022")
     .formParam("numPassengers", "1")
     .formParam("advanceDiscount", "0")
     .formParam("seatType", "Coach")
@@ -143,14 +131,11 @@ object Actions {
 
   val goToHome: HttpRequestBuilder = http("welcome.pl")
     .get("/cgi-bin/welcome.pl?page=menus")
-    .headers(upgradeInsecureRequestHeader)
     .resources(
       http("nav.pl")
-        .get("/cgi-bin/nav.pl?page=menu&in=home")
-        .headers(upgradeInsecureRequestHeader),
+        .get("/cgi-bin/nav.pl?page=menu&in=home"),
       http("login.pl")
         .get("/cgi-bin/login.pl?intro=true")
-        .headers(upgradeInsecureRequestHeader)
     )
 
 
