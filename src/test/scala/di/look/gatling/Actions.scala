@@ -8,30 +8,12 @@ import io.gatling.http.request.builder.HttpRequestBuilder
 object Actions {
 
   val openWebTours: HttpRequestBuilder = http("openWebTours")
-    .get("/webtours/")
-    .check(regex("""Web Tours"""))
-    .resources(
-      http("header.html")
-        .get("/webtours/header.html"),
-      http("welcome.pl")
-        .get("/cgi-bin/welcome.pl?signOff=true"),
-      http("hp_logo.png")
-        .get("/webtours/images/hp_logo.png")
-        .headers(acceptHeader),
-      http("webtours.png")
-        .get("/webtours/images/webtours.png")
-        .headers(acceptHeader),
-      http("home.html")
-        .get("/WebTours/home.html"),
-      http("nav.pl")
-        .get("/cgi-bin/nav.pl?in=home")
-        .check(regex("name=\"userSession\" value=\"(.*)\"").saveAs("userSession")),
-      http("mer_login.gif")
-        .get("/WebTours/images/mer_login.gif")
-        .headers(acceptHeader)
-    )
+    .get("/cgi-bin/welcome.pl?signOff=true")
 
-  val login: HttpRequestBuilder = http("login.pl")
+  val navigate: HttpRequestBuilder = http("open home page").get("/cgi-bin/nav.pl?in=home")
+    .check(regex("name=\"userSession\" value=\"(.*)\"").saveAs("userSession"))
+
+  val login: HttpRequestBuilder = http("login")
     .post("/cgi-bin/login.pl")
     .headers(originHeader)
     .formParam("userSession", "#{userSession}")
@@ -40,53 +22,37 @@ object Actions {
     .formParam("login.x", "68")
     .formParam("login.y", "13")
     .formParam("JSFormSubmit", "off")
-    .check(regex("""User password was correct""").exists)
     .resources(
-      http("nav.pl")
+      http("load nav.pl")
         .get("/cgi-bin/nav.pl?page=menu&in=home"),
-      http("login.pl")
-        .get("/cgi-bin/login.pl?intro=true"),
-      http("flights.gif")
-        .get("/WebTours/images/flights.gif")
-        .headers(acceptHeader),
-      http("in_home.gif")
-        .get("/WebTours/images/in_home.gif")
-        .headers(acceptHeader),
-      http("signoff.gif")
-        .get("/WebTours/images/signoff.gif")
-        .headers(acceptHeader),
-      http("itinerary.gif")
-        .get("/WebTours/images/itinerary.gif")
-        .headers(acceptHeader)
+      http("load login.pl")
+        .get("/cgi-bin/login.pl?intro=true")
+        .check(regex("""Welcome, <b>#{login}</b>, to the Web Tours reservation pages""").exists)
     )
 
-  val goToFlights: HttpRequestBuilder = http("welcome.pl")
+  val goToFlights: HttpRequestBuilder = http("go to flights")
     .get("/cgi-bin/welcome.pl?page=search")
     .check(status is 200)
     .resources(
-      http("nav.pl")
+      http("load nav.pl")
         .get("/cgi-bin/nav.pl?page=menu&in=flights"),
-      http("reservations.pl")
-        .get("/cgi-bin/reservations.pl?page=welcome"),
-      http("home.gif")
-        .get("/WebTours/images/home.gif")
-        .headers(acceptHeader),
-      http("in_flights.gif")
-        .get("/WebTours/images/in_flights.gif")
-        .headers(acceptHeader),
-      http("button_next.gif")
-        .get("/WebTours/images/button_next.gif")
-        .headers(acceptHeader)
+      http("load reservations.pl")
+        .get("/cgi-bin/reservations.pl?page=welcome")
+        .check(
+          css("select[name=\"depart\"] option").findAll.saveAs("cities"),
+          css("input[name=\"departDate\"]", "value").find.saveAs("departDate"),
+          css("input[name=\"returnDate\"]", "value").find.saveAs("returnDate")
+        )
     )
 
-  val findFlight: HttpRequestBuilder = http("reservations.pl")
+  val findFlight: HttpRequestBuilder = http("find flights")
     .post("/cgi-bin/reservations.pl")
     .headers(originHeader)
     .formParam("advanceDiscount", "0")
-    .formParam("depart", "Portland")
-    .formParam("departDate", "02/02/2022")
-    .formParam("arrive", "Portland")
-    .formParam("returnDate", "04/02/2022")
+    .formParam("depart", "#{cities.random()}")
+    .formParam("departDate", "#{departDate}")
+    .formParam("arrive", "#{cities.random()}")
+    .formParam("returnDate", "#{returnDate}")
     .formParam("numPassengers", "1")
     .formParam("seatPref", "None")
     .formParam("seatType", "Coach")
@@ -95,11 +61,14 @@ object Actions {
     .formParam(".cgifields", "roundtrip")
     .formParam(".cgifields", "seatType")
     .formParam(".cgifields", "seatPref")
+    .check(
+      css("input[name=\"outboundFlight\"]", "value").findRandom.saveAs("outboundFlight"),
+    )
 
-  val selectFlight: HttpRequestBuilder = http("reservations.pl")
+  val selectFlight: HttpRequestBuilder = http("reserve flight")
     .post("/cgi-bin/reservations.pl")
     .headers(originHeader)
-    .formParam("outboundFlight", "552;0;02/02/2022")
+    .formParam("outboundFlight", "#{outboundFlight}")
     .formParam("numPassengers", "1")
     .formParam("advanceDiscount", "0")
     .formParam("seatType", "Coach")
@@ -107,7 +76,7 @@ object Actions {
     .formParam("reserveFlights.x", "66")
     .formParam("reserveFlights.y", "8")
 
-  val pay: HttpRequestBuilder = http("reservations.pl")
+  val pay: HttpRequestBuilder = http("buy ticket")
     .post("/cgi-bin/reservations.pl")
     .headers(originHeader)
     .formParam("firstName", "Di")
@@ -121,7 +90,7 @@ object Actions {
     .formParam("numPassengers", "1")
     .formParam("seatType", "Coach")
     .formParam("seatPref", "None")
-    .formParam("outboundFlight", "552;0;01/31/2022")
+    .formParam("outboundFlight", "#{outboundFlight}")
     .formParam("advanceDiscount", "0")
     .formParam("returnFlight", "")
     .formParam("JSFormSubmit", "off")
@@ -129,12 +98,12 @@ object Actions {
     .formParam("buyFlights.y", "13")
     .formParam(".cgifields", "saveCC")
 
-  val goToHome: HttpRequestBuilder = http("welcome.pl")
+  val goToHome: HttpRequestBuilder = http("go to home")
     .get("/cgi-bin/welcome.pl?page=menus")
     .resources(
-      http("nav.pl")
+      http("load nav.pl")
         .get("/cgi-bin/nav.pl?page=menu&in=home"),
-      http("login.pl")
+      http("load login.pl")
         .get("/cgi-bin/login.pl?intro=true")
     )
 

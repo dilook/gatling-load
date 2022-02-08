@@ -5,5 +5,5 @@ import io.gatling.core.feeder.BatchableFeederBuilder
 
 object Feeders {
 
-  val loginPassFeeder: BatchableFeederBuilder[String] = csv("login.csv").random.eager
+  val loginPassFeeder: BatchableFeederBuilder[String] = csv("cred.csv").circular.eager
 }
